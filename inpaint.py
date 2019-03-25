@@ -10,13 +10,38 @@ Keys:
 import numpy as np
 import cv2 as cv
 import argparse
-# TODO: Copy Sketcher class to inpaint.py
-# TODO: Remove below line
-from common import Sketcher
+
+class Sketcher:
+    def __init__(self, windowname, dests, colors_func):
+        self.prev_pt = None
+        self.windowname = windowname
+        self.dests = dests
+        self.colors_func = colors_func
+        self.dirty = False
+        self.show()
+        cv.setMouseCallback(self.windowname, self.on_mouse)
+
+    def show(self):
+        cv.imshow(self.windowname, self.dests[0])
+        cv.imshow(self.windowname + ": mask", self.dests[1])
+
+    def on_mouse(self, event, x, y, flags, param):
+        pt = (x, y)
+        if event == cv.EVENT_LBUTTONDOWN:
+            self.prev_pt = pt
+        elif event == cv.EVENT_LBUTTONUP:
+            self.prev_pt = None
+
+        if self.prev_pt and flags & cv.EVENT_FLAG_LBUTTON:
+            for dst, color in zip(self.dests, self.colors_func()):
+                cv.line(dst, self.prev_pt, pt, color, 5)
+            self.dirty = True
+            self.prev_pt = pt
+            self.show()
+
 
 ap = argparse.ArgumentParser()
-# TODO: Add default argument
-ap.add_argument("-i", "--image", help = 'required image path file')
+ap.add_argument("-i", "--image", default="sample.jpeg", help = 'required image path file')
 args = vars(ap.parse_args())
 
 
