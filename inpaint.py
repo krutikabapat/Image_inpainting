@@ -11,6 +11,7 @@ import numpy as np
 import cv2 as cv
 import argparse
 
+# OpenCV Utility Class for Mouse Handling
 class Sketcher:
     def __init__(self, windowname, dests, colors_func):
         self.prev_pt = None
