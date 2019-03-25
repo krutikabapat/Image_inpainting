@@ -1,6 +1,6 @@
 """
 Usage:
-  python3 inpaint.py [<image>]
+  python3 inpaint.py --image <image_path>
 
 Keys:
   SPACE - inpaint
@@ -55,12 +55,12 @@ def main():
         return
 
     # Create a copy of original image
-    img_mark = img.copy()
+    img_mask = img.copy()
     # Create a black copy of original image
     # Acts as a mask
-    mark = np.zeros(img.shape[:2], np.uint8)
+    inpaintMask = np.zeros(img.shape[:2], np.uint8)
     # Create sketch using OpenCV Utility Class: Sketcher
-    sketch = Sketcher('img', [img_mark, mark], lambda : ((255, 255, 255), 255))
+    sketch = Sketcher('image', [img_mask, inpaintMask], lambda : ((255, 255, 255), 255))
 
     while True:
         ch = cv.waitKey()
@@ -69,11 +69,11 @@ def main():
         if ch == ord(' '):
             # Use Algorithm proposed by Alexendra Telea: Fast Marching Method (2004)
             # Reference: https://pdfs.semanticscholar.org/622d/5f432e515da69f8f220fb92b17c8426d0427.pdf
-            res = cv.inpaint(src=img_mark, inpaintMask=mark, inpaintRadius=3, flags=cv.INPAINT_TELEA)
+            res = cv.inpaint(src=img_mask, inpaintMask=inpaintMask, inpaintRadius=3, flags=cv.INPAINT_TELEA)
             cv.imshow('Inpaint Output', res)
         if ch == ord('r'):
-            img_mark[:] = img
-            mark[:] = 0
+            img_mask[:] = img
+            inpaintMask[:] = 0
             sketch.show()
 
     print('Completed')

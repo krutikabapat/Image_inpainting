@@ -8,24 +8,14 @@
 using namespace cv;
 using namespace std;
 
-static void help()
-{
-    cout << "\nCool inpainging demo. Inpainting repairs damage to images by floodfilling the damage \n"
-            << "with surrounding image areas.\n"
-            "Using OpenCV version %s\n" << CV_VERSION << "\n"
-    "Usage:\n"
-        "./inpaint [image_name -- Default fruits.jpg]\n" << endl;
-
-    cout << "Hot keys: \n"
-        "\tESC - quit the program\n"
-        "\tr - restore the original image\n"
-        "\ti or SPACE - run inpainting algorithm\n"
-        "\t\t(before running it, paint something on the image)\n" << endl;
-}
-
+// Declare Mat objects for original image and mask for inpainting
 Mat img, inpaintMask;
+// Mat object for result output
+Mat res;
 Point prevPt(-1,-1);
 
+// onMouse function for Mouse Handling
+// Used to draw regions required to inpaint
 static void onMouse( int event, int x, int y, int flags, void* )
 {
     if( event == EVENT_LBUTTONUP || !(flags & EVENT_FLAG_LBUTTON) )
@@ -41,52 +31,61 @@ static void onMouse( int event, int x, int y, int flags, void* )
         line( img, prevPt, pt, Scalar::all(255), 5, 8, 0 );
         prevPt = pt;
         imshow("image", img);
+        imshow("image: mask", inpaintMask);
     }
 }
 
 
 int main( int argc, char** argv )
 {
-    //cv::CommandLineParser parser(argc, argv, "{@image|fruits.jpg|}");
-    //help();
+    cout << "Usage: ./inpaint <image_path>" << endl;
+    cout << "Keys: " << endl;
+    cout << "SPACE - inpaint" << endl;
+    cout << "r - reset the inpainting mask" << endl;
+    cout << "ESC - exit" << endl;
 
-    string filename = "latest.jpeg";
-    Mat img0 = imread(filename, IMREAD_COLOR);
-    if(img0.empty())
+    string filename;
+    if(argc > 1)
+        filename = argv[1];
+    else
+        filename = "sample.jpeg";
+
+    // Read image in color mode
+    img = imread(filename, IMREAD_COLOR);
+    Mat img_mask;
+    // Return error if image not read properly
+    if(img.empty())
     {
-        cout << "Couldn't open the image " << filename << ". Usage: inpaint <image_name>\n" << endl;
+        cout << "Failed to load image: " << filename << endl;
         return 0;
     }
 
     namedWindow("image", WINDOW_AUTOSIZE);
 
-    img = img0.clone();
-    inpaintMask = Mat::zeros(img.size(), CV_8U);
+    // Create a copy for the original image
+    img_mask = img.clone();
+    // Initialize mask (black image)
+    inpaintMask = Mat::zeros(img_mask.size(), CV_8U);
 
+    // Show the original image
     imshow("image", img);
     setMouseCallback( "image", onMouse, NULL);
 
     for(;;)
     {
         char c = (char)waitKey();
-
-        if( c == 27 )
-            break;
-
-        if( c == 'r' )
-        {
+        if (c == ' ') {
+            // Use Algorithm proposed by Alexendra Telea
+            inpaint(img, inpaintMask, res, 3, INPAINT_TELEA);
+            imshow("Inpaint Output", res);
+        }
+        if (c == 'r') {
             inpaintMask = Scalar::all(0);
-            img0.copyTo(img);
-            imshow("image", img);
+            img_mask.copyTo(img);
+            imshow("image", inpaintMask);
         }
-
-        if( c == 'i' || c == ' ' )
-        {
-            Mat inpainted;
-            inpaint(img, inpaintMask, inpainted, 3, INPAINT_TELEA);
-            imshow("inpainted image", inpainted);
-        }
+        if ( c == 27 )
+            break;
     }
-
     return 0;
 }
