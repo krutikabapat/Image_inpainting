@@ -2,4 +2,4 @@
 
 ## Usage
 
-<python> python3 inpaint.py -i latest.jpeg </python>
+<code> python3 inpaint.py -i latest.jpeg </code>
